@@ -6,7 +6,7 @@ import seaborn as sns
 
 
 class network:
-    def __init__(self, eps=0.25, tol=0.15, pruning=3, thinning=10):
+    def __init__(self, eps=0.25, tol=0.15, pruning=3, thinning=10, num_fluctuations=100):
         """
         :param eps: Допустимая невязка
         :param tol: Толерантность к ошибкам
@@ -21,10 +21,10 @@ class network:
         self.pruning = pruning
         self.thinning = thinning
         self.num_neurons = 0
-        self.num_fluctuations = 0
-
-    def forward(self, data, num_fluctuations):
         self.num_fluctuations = num_fluctuations
+        self.a = 0
+
+    def forward(self, data):
         self.data = data
         self.num_neurons = len(data)
 
@@ -61,6 +61,12 @@ class network:
 
         return W + W.T
 
+    def calc_w_otf(self):
+        """ Заполнение W on-the-fly"""
+        W = np.zeros(self.W.shape)
+
+
+
     def compute_a(self):
         a = 0
         tri = Delaunay(self.data)
@@ -72,6 +78,7 @@ class network:
                 a += np.array(neighbours).mean()
 
         a /= self.num_neurons
+        self.a = a
         return a
 
     def dist(self, x, y):

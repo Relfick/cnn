@@ -5,11 +5,11 @@ from test_data import test_data
 if __name__ == "__main__":
 
     data = test_data.get_spheres()
-    net = network()
-
     num_fluctuations = 100
 
-    y = net.forward(data, num_fluctuations)
+    net = network(num_fluctuations)
+
+    y = net.forward(data)
 
     net.visualize_sync()
     clusters = net.get_clusters()
