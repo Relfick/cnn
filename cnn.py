@@ -41,7 +41,6 @@ class network:
             if self.pruning:
                 result[t] = np.round(result[t], self.pruning)
 
-        print("y =", result)
         result = (np.delete(result, 0, 0)).T
         # Прореживание
         if self.thinning:
@@ -113,7 +112,6 @@ class network:
         """ Бинарный вектор G """
         M = self.calc_m()
         G = (M <= self.eps).astype(int)
-        print("G =", G)
         return G
 
     def calc_p(self):
@@ -122,7 +120,6 @@ class network:
         P = np.zeros((self.num_neurons, self.num_neurons))
         for i in range(self.num_neurons):
             P[i] = 1 - np.count_nonzero(G[i], axis=1) / self.num_fluctuations
-        print("P =", P)
         return P
 
     def calc_m(self):
@@ -131,7 +128,6 @@ class network:
         for i in range(self.num_neurons):
             for k in range(self.num_neurons):
                 M[i][k] = np.abs(self.y[k] - self.y[i])
-        print("M =", M)
         return M
 
     def condense_sets(self, sets):
