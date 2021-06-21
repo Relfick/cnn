@@ -106,14 +106,7 @@ class network:
             # if self.thinning:  # Прореживание
             #     result = self.thinning_out(result)
 
-            result = result
-
-
-
-
         return result
-
-
 
 
     def compute_a(self):
@@ -142,9 +135,9 @@ class network:
         return ret
 
     def thinning_out(self, y):
-        y_thinned = np.delete(y, slice(self.thinning - 1, None, self.thinning), axis=1)
+        # y_thinned = np.delete(y, slice(self.thinning - 1, None, self.thinning), axis=1)
+        y_thinned = y[:, self.thinning - 1::self.thinning]
         self.num_fluctuations = len(y_thinned[0])
-        self.num_neurons = len(y_thinned)
         return y_thinned
 
     def get_clusters(self):
@@ -207,6 +200,19 @@ class network:
         ax = fig.add_subplot()
 
         data = np.around(self.y, 2)
+
+        sns.heatmap(data, ax=ax, cmap="rainbow")
+
+        fig.set_figwidth(14)
+        fig.set_figheight(6)
+
+        plt.show()
+
+    def visualize_w(self):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+
+        data = self.W
 
         sns.heatmap(data, ax=ax, cmap="rainbow")
 
