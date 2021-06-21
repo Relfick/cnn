@@ -13,9 +13,9 @@ class network:
         :param pruning: Степень обрезки (сколько знаков после запятой)
         :param thinning: Степень прореживания (как часто отбрасываем элементы)
         """
-        self.data = []
-        self.y = []
-        self.W = []
+        self.data = np.array([])
+        self.y = np.array([])
+        self.W = np.array([])
         self.eps = eps
         self.tol = tol
         self.pruning = pruning
@@ -25,45 +25,94 @@ class network:
         self.a = 0
 
     def forward(self, data):
-        self.data = data
-        self.num_neurons = len(data)
+        """ пока в дате всё """
+        if self.data.size > 0:  # clustering on-the-fly
+            self.data = np.row_stack((self.data, data))
 
-        self.W = self.calc_w()
+            new_num_neurons = len(data)
+            self.num_neurons = self.num_neurons + len(data)
 
-        result = np.zeros((self.num_fluctuations + 1, self.num_neurons))
-        result[0] = np.random.sample(self.num_neurons)
-        for t in range(1, self.num_fluctuations + 1):
-            y_new = self.W @ self.chaos_func(result[t - 1])
-            c = 1 / np.sum(self.W, axis=1)
-            result[t] = np.diag(c) @ y_new
+            self.W = self.calc_w()
+        else:  # first input
+            self.data = data
 
-            # Обрезка
-            if self.pruning:
-                result[t] = np.round(result[t], self.pruning)
+            new_num_neurons = len(data)
+            self.num_neurons = len(data)
 
-        result = (np.delete(result, 0, 0)).T
-        # Прореживание
-        if self.thinning:
-            result = self.thinning_out(result)
+            self.W = self.calc_w()
+
+        result = self.make_fluctuations(new_num_neurons)
 
         self.y = result
         return result
 
     def calc_w(self):
-        """Заполнение W"""
+        """ Заполнение W """
         W = np.zeros((self.num_neurons, self.num_neurons))
-        a = self.compute_a()
 
-        for i in range(self.num_neurons):
+        if self.a == 0:
+            self.a = self.compute_a()
+
+        if self.W.size == 0:
+            start_index = 0
+        else:
+            start_index = self.W.shape[0]
+
+        for i in range(start_index, self.num_neurons):
             for j in range(i + 1, self.num_neurons):
                 d = np.linalg.norm(self.data[i] - self.data[j]) ** 2
-                W[i][j] = np.exp(-d / (2 * a))
+                W[i][j] = np.exp(-d / (2 * self.a))
 
-        return W + W.T
+        W = W + W.T
+        if self.W.size == 0:
+            return W
+        else:
+            W[:self.W.shape[0], :self.W.shape[1]] = self.W
+            return W
 
-    def calc_w_otf(self):
-        """ Заполнение W on-the-fly"""
-        W = np.zeros(self.W.shape)
+    def make_fluctuations(self, new_num_neurons):
+
+        if self.y.size == 0:
+            result = np.zeros((self.num_fluctuations + 1, self.num_neurons))
+            result[0] = np.random.sample(self.num_neurons)
+            for t in range(1, self.num_fluctuations + 1):
+                y_new = self.W @ self.chaos_func(result[t - 1])
+                c = 1 / np.sum(self.W, axis=1)
+                result[t] = np.diag(c) @ y_new
+
+                if self.pruning:  # Обрезка
+                    result[t] = np.round(result[t], self.pruning)
+
+            result = (np.delete(result, 0, 0)).T  # Удаление рандомных стартовых значений
+
+            # if self.thinning:  # Прореживание
+            #     result = self.thinning_out(result)
+        else:
+            W = self.W[-new_num_neurons:]
+            result = np.zeros((self.num_fluctuations + 1, new_num_neurons))
+            result[0] = np.random.sample(new_num_neurons)
+            self.y = np.row_stack((np.random.sample(self.y.shape[0]), self.y.T))  # т.к. в у уже нет рандомного слоя
+            result = np.column_stack((self.y, result))
+            for t in range(1, self.num_fluctuations + 1):
+                y_new = W @ self.chaos_func(result[t - 1])  # (200, 600) x (600, 1)
+                c = 1 / np.sum(W, axis=1)
+                result[t][-new_num_neurons:] = np.diag(c) @ y_new
+
+                if self.pruning:  # Обрезка
+                    result[t][-new_num_neurons:] = np.round(result[t][-new_num_neurons:], self.pruning)
+
+            result = (np.delete(result, 0, 0)).T
+
+            # if self.thinning:  # Прореживание
+            #     result = self.thinning_out(result)
+
+            result = result
+
+
+
+
+        return result
+
 
 
 
@@ -78,7 +127,6 @@ class network:
                 a += np.array(neighbours).mean()
 
         a /= self.num_neurons
-        self.a = a
         return a
 
     def dist(self, x, y):
@@ -90,7 +138,8 @@ class network:
         return indices
 
     def chaos_func(self, y):
-        return 1 - 2 * (y ** 2)
+        ret = 1 - 2 * (y ** 2)
+        return ret
 
     def thinning_out(self, y):
         y_thinned = np.delete(y, slice(self.thinning - 1, None, self.thinning), axis=1)

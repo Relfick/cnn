@@ -34,3 +34,33 @@ class test_data:
         z = np.concatenate([z1, z2], axis=0)
         data = np.concatenate([x, y, z], axis=1)
         return data
+
+    @staticmethod
+    def get_add_sphere():
+        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1)) - 2
+        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1)) - 2
+        z1 = (np.cos(v)).reshape((-1, 1)) - 2
+
+        data = np.concatenate([x1, y1, z1], axis=1)
+        return data
+
+    @staticmethod
+    def get_add_sphere_2():
+        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1)) + 2
+        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1)) - 2
+        z1 = (np.cos(v)).reshape((-1, 1)) + 2
+
+        data = np.concatenate([x1, y1, z1], axis=1)
+        return data
+
+    @staticmethod
+    def get_add_sphere_3():
+        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1)) / 2
+        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1)) / 2
+        z1 = (np.cos(v)).reshape((-1, 1)) / 2
+
+        data = np.concatenate([x1, y1, z1], axis=1)
+        return data
