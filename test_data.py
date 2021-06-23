@@ -1,4 +1,5 @@
 import torchvision.datasets
+from sklearn import datasets
 import numpy as np
 
 
@@ -11,9 +12,9 @@ class test_data:
         """ Работает при наличии суперкомпьютера """
         MNIST_train = torchvision.datasets.MNIST('./', download=True, train=True)
         X_train = MNIST_train.data
-        # y_train = MNIST_train.targets
+        y_train = MNIST_train.targets
         X_train = X_train.float()
-        X_train = X_train.reshape([-1, 10*10])
+        X_train = X_train.reshape([-1, 10 * 10])
 
         data = X_train.numpy()[:150, :]
         return data
@@ -33,4 +34,16 @@ class test_data:
         y = np.concatenate([y1, y2], axis=0)
         z = np.concatenate([z1, z2], axis=0)
         data = np.concatenate([x, y, z], axis=1)
+        return data
+
+    @staticmethod
+    def get_iris():
+        """ Работает при наличии суперкомпьютера """
+        iris_df = datasets.load_iris()
+        X_train = iris_df.data[:, 0]
+        y_train = iris_df.target
+        # X_train = X_train.float()
+        X_train = X_train.reshape([-1, 15 * 10])
+
+        data = iris_df.data[:, 0]
         return data

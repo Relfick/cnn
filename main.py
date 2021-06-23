@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial import Delaunay
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torchvision.datasets
@@ -25,7 +27,7 @@ import torchvision.datasets
 # x = X_train.numpy()[:150, :]
 
 
-# Две сферы
+# Две сферы что за вектора u and v? что они делают?
 u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
 x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1))
 y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1))
@@ -40,7 +42,7 @@ y = np.concatenate([y1, y2], axis=0)
 z = np.concatenate([z1, z2], axis=0)
 x = np.concatenate([x, y, z], axis=1)
 
-# Random
+# Random  Зачем?
 # x = np.array([[0., 0.5], [1., 1.], [-1., 2.], [-1., -1.], [2., 1.]])
 # x = np.random.uniform(-28, 28, (140, 2))
 

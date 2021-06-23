@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial import Delaunay
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 

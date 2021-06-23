@@ -4,7 +4,7 @@ from test_data import test_data
 
 if __name__ == "__main__":
 
-    data = test_data.get_spheres()
+    data = test_data.get_iris()
     net = network()
 
     num_fluctuations = 100
