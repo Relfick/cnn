@@ -1,5 +1,6 @@
 import torchvision.datasets
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class test_data:
@@ -64,3 +65,10 @@ class test_data:
 
         data = np.concatenate([x1, y1, z1], axis=1)
         return data
+
+    @staticmethod
+    def visualize_3d(x):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x[:, 0], x[:, 1], x[:, 2])
+        plt.show()
