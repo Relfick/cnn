@@ -12,6 +12,8 @@ if __name__ == "__main__":
     temp = add_data[44:80]
     add_data[44:80] = add_data_2[44:80]
     add_data_2[44:80] = temp
+    a = 5
+    print(temp / a)
 
     net = network(num_fluctuations=400)
 
