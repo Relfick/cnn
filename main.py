@@ -9,7 +9,7 @@ if __name__ == "__main__":
     add_data_2 = test_data.get_add_sphere_2()
     add_data_3 = test_data.get_add_sphere_3()
 
-    temp = add_data[44:80].copy()
+    temp = add_data[44:80]
     add_data[44:80] = add_data_2[44:80]
     add_data_2[44:80] = temp
 
