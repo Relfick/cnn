@@ -9,13 +9,14 @@ if __name__ == "__main__":
     add_data_2 = test_data.get_add_sphere_2()
     add_data_3 = test_data.get_add_sphere_3()
 
-    temp = add_data[50:80].copy()
+    temp = add_data[60:80].copy()
     add_data[50:80] = add_data_2[50:80]
     add_data_2[50:80] = temp
     a = 5
     b = 5
     print(temp / a)
     print(temp / b)
+    print('hello')
 
     net = network(num_fluctuations=400)
 
