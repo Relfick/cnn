@@ -12,12 +12,13 @@ class test_data:
         """ Работает при наличии суперкомпьютера """
         MNIST_train = torchvision.datasets.MNIST('./', download=True, train=True)
         X_train = MNIST_train.data
-        # y_train = MNIST_train.targets
+        targets = MNIST_train.targets
         X_train = X_train.float()
-        X_train = X_train.reshape([-1, 10*10])
+        X_train = X_train.reshape([-1, 28*28])
 
-        data = X_train.numpy()[:150, :]
-        return data
+        data = X_train.numpy()[:10000, :]
+        targets = targets.numpy()[:10000]
+        return data, targets
 
     @staticmethod
     def get_spheres():

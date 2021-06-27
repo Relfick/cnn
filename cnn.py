@@ -1,9 +1,10 @@
 import random
 import numpy as np
 from numpy.linalg import norm
-from scipy.spatial import Delaunay
+from scipy.spatial import Delaunay, ConvexHull
 import matplotlib.pyplot as plt
 import seaborn as sns
+from annoy import AnnoyIndex
 
 
 class network:
@@ -92,10 +93,10 @@ class network:
 
         self.y = result
 
-    def compute_a(self):
+    def compute_a_2(self):
         a = 0
         tri = Delaunay(self.data)
-
+        print('tri done')
         for i in range(self.num_neurons):
             neighbours = self.get_neighbours(i, tri)
             neighbours = [self.dist(self.data[i], self.data[j]) for j in neighbours]
@@ -103,6 +104,30 @@ class network:
                 a += np.array(neighbours).mean()
 
         a /= self.num_neurons
+        return a
+
+    def compute_a(self):
+        a = 0
+        f = self.data.shape[1]
+        t = AnnoyIndex(f, 'angular')  # Length of item vector that will be indexed
+        for i in range(self.num_neurons):  # 10000
+            t.add_item(i, self.data[i])
+
+        par = round(self.num_neurons / 10)
+        t.build(par)  # 1000 trees
+        t.save('test.ann')
+
+        u = AnnoyIndex(f, 'angular')
+        u.load('test.ann')  # super fast, will just mmap the file
+        num_neighbours = par
+        for i in range(self.num_neurons):
+            neighbours = u.get_nns_by_item(i, num_neighbours)  # Ищем по num_neighbours соседей для каждой точки
+            neighbours = [self.dist(self.data[i], self.data[j]) for j in neighbours]
+            if len(neighbours) != 0:
+                a += np.array(neighbours).mean()
+
+        a /= self.num_neurons
+        print(f'a = {a}')
         return a
 
     def dist(self, x, y):
