@@ -118,14 +118,23 @@ class network:
         return ret
 
     def prune(self, y):
-        if self.pruning:  # Обрезка
+        """ Обрезка """
+        if self.pruning:
             return np.round(y, self.pruning)
 
-    def thinning_out(self, y):
+    def thinning_out(self, y, discard=False):
+        """
+        Реализует прореживание, если self.thinning != False
+        :param y:
+        :param discard: По умолчанию False - реализует сохранение каждого self.thinning колебания,
+        остальные отбрасываются. Если True - отбрасывается каждое self.thinning колебание, остальные сохраняются.
+        """
         y_thinned = y
         if self.thinning:
-            # y_thinned = np.delete(y, slice(self.thinning - 1, None, self.thinning), axis=1)
-            y_thinned = y[:, self.thinning - 1::self.thinning]
+            if discard:
+                y_thinned = np.delete(y, slice(self.thinning - 1, None, self.thinning), axis=1)
+            else:
+                y_thinned = y[:, self.thinning - 1::self.thinning]
             self.num_fluctuations = len(y_thinned[0])
         return y_thinned
 
