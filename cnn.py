@@ -8,7 +8,7 @@ import seaborn as sns
 
 
 class network:
-    def __init__(self, eps=0.25, tol=0.15, pruning=3, thinning=10):
+    def __init__(self, eps=0.25, tol=0.05, pruning=3, thinning=10):
         """
         :param eps: Допустимая невязка
         :param tol: Толерантность к ошибкам
@@ -191,6 +191,7 @@ class network:
 
         for i in range(len(clusters)):
             cluster_points = x[clusters[i]]
-            plt.plot(cluster_points[:, 0], cluster_points[:, 1], colors[i] + 'o')
+            ind = i % 7
+            plt.plot(cluster_points[:, 0], cluster_points[:, 1], colors[ind] + 'o')
 
         plt.show()
