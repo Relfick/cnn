@@ -1,6 +1,8 @@
 import torchvision.datasets
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
+import seaborn as sns
 
 
 class test_data:
@@ -16,8 +18,8 @@ class test_data:
         X_train = X_train.float()
         X_train = X_train.reshape([-1, 28*28])
 
-        data = X_train.numpy()[:10000, :]
-        targets = targets.numpy()[:10000]
+        data = X_train.numpy()[:5000, :]
+        targets = targets.numpy()[:5000]
         return data, targets
 
     @staticmethod
@@ -68,8 +70,28 @@ class test_data:
         return data
 
     @staticmethod
-    def visualize_3d(x):
+    def visualize_3d(data):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(x[:, 0], x[:, 1], x[:, 2])
+        ax.scatter(data[:, 0], data[:, 1], data[:, 2])
         plt.show()
+
+    @staticmethod
+    def visualize_heatmap(data):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+
+        sns.heatmap(data, ax=ax, cmap="rainbow")
+
+        fig.set_figwidth(14)
+        fig.set_figheight(6)
+
+        plt.show()
+
+    @staticmethod
+    def normalize_minmax(data):
+        """ Использовать для изображений """
+        min_val = 0  # Нижняя граница
+        max_val = 1  # Верхняя граница
+        norm_data = preprocessing.minmax_scale(data, (min_val, max_val))
+        return norm_data
