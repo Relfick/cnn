@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from numpy.linalg import norm
-from scipy.spatial import Delaunay, ConvexHull
+from scipy.spatial import Delaunay
 import matplotlib.pyplot as plt
 import seaborn as sns
 from annoy import AnnoyIndex
@@ -71,6 +71,8 @@ class network:
             for j in range(0, i):
                 d = np.linalg.norm(self.data[i] - self.data[j]) ** 2
                 W[i][j] = np.exp(-d / (2 * self.a))
+            if i % 100 == 0:
+                print(f'i = {i}')
 
         W = W + W.T
         if self.W.size == 0:
@@ -94,6 +96,7 @@ class network:
         self.y = result
 
     def compute_a_2(self):
+        """ Вычисление коэффициента А с помощью триангуляции Делоне """
         a = 0
         tri = Delaunay(self.data)
         print('tri done')
@@ -107,19 +110,24 @@ class network:
         return a
 
     def compute_a(self):
+        """ Вычисление коээфициента А с помощью Annoy """
         a = 0
-        f = self.data.shape[1]
-        t = AnnoyIndex(f, 'angular')  # Length of item vector that will be indexed
-        for i in range(self.num_neurons):  # 10000
+        f = self.data.shape[1]  # Количество параметров примера
+        t = AnnoyIndex(f, 'angular')
+        for i in range(self.num_neurons):
             t.add_item(i, self.data[i])
 
-        par = round(self.num_neurons / 10)
-        t.build(par)  # 1000 trees
+        num_trees = 100  # Гиперпараметр, больше деревьев - точнее, но медленнее
+        t.build(num_trees)
         t.save('test.ann')
 
         u = AnnoyIndex(f, 'angular')
-        u.load('test.ann')  # super fast, will just mmap the file
-        num_neighbours = par
+        u.load('test.ann')
+
+        if self.num_neurons > 1000:
+            num_neighbours = 50  # Гиперпараметр, больше соседей - точнее, но медленнее
+        else:
+            num_neighbours = round(self.num_neurons / 10)
         for i in range(self.num_neurons):
             neighbours = u.get_nns_by_item(i, num_neighbours)  # Ищем по num_neighbours соседей для каждой точки
             neighbours = [self.dist(self.data[i], self.data[j]) for j in neighbours]
@@ -134,6 +142,7 @@ class network:
         return (((x - y) ** 2).sum()) ** 0.5
 
     def get_neighbours(self, k, tri):
+        """ Для триангуляции """
         indptr, indices = tri.vertex_neighbor_vertices
         indices = indices[indptr[k]:indptr[k + 1]]
         return indices
@@ -242,6 +251,19 @@ class network:
         ax = fig.add_subplot()
 
         data = self.W
+
+        sns.heatmap(data, ax=ax, cmap="rainbow")
+
+        fig.set_figwidth(14)
+        fig.set_figheight(6)
+
+        plt.show()
+
+    def visualize_data(self):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+
+        data = self.data
 
         sns.heatmap(data, ax=ax, cmap="rainbow")
 
