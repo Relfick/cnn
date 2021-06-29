@@ -296,5 +296,3 @@ class network:
             plt.scatter(cluster_points[:, 0], cluster_points[:, 1], marker='o', color=self.colors[i])
 
         plt.show()
-
-
