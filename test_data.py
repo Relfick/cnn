@@ -1,12 +1,5 @@
-from itertools import combinations, product
-
 import torchvision.datasets
-from sklearn import datasets, decomposition
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn import preprocessing
-import seaborn as sns
-from sklearn.datasets import make_blobs
 
 
 class test_data:
