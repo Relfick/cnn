@@ -1,5 +1,9 @@
 import torchvision.datasets
 import numpy as np
+from matplotlib import pyplot as plt
+from sklearn import preprocessing, datasets, __all__, decomposition
+from sklearn.datasets import make_blobs
+import seaborn as sns
 
 
 class test_data:
