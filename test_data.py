@@ -24,48 +24,18 @@ class test_data:
         return data, targets
 
     @staticmethod
-    def get_spheres():
+    def get_sphere(x_offset=0, y_offset=0, z_offset=0, volume=1):
+        """
+        Возвращает 200 точек сферы. Каждая строка - координаты x, y, z точки.
+        :param x_offset: смещение координат по оси x (от нуля)
+        :param y_offset: смещение координат по оси y (от нуля)
+        :param z_offset: смещение координат по оси z (от нуля)
+        :param volume: каждая координата умножается на volume, по умолчанию volume=1
+        """
         u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
-        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1))
-        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1))
-        z1 = (np.cos(v)).reshape((-1, 1))
-
-        x2 = x1 + 2
-        y2 = y1 + 2
-        z2 = z1 + 2
-
-        x = np.concatenate([x1, x2], axis=0)
-        y = np.concatenate([y1, y2], axis=0)
-        z = np.concatenate([z1, z2], axis=0)
-        data = np.concatenate([x, y, z], axis=1)
-        return data
-
-    @staticmethod
-    def get_add_sphere():
-        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
-        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1)) - 2
-        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1)) - 2
-        z1 = (np.cos(v)).reshape((-1, 1)) - 2
-
-        data = np.concatenate([x1, y1, z1], axis=1)
-        return data
-
-    @staticmethod
-    def get_add_sphere_2():
-        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
-        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1)) + 2
-        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1)) - 2
-        z1 = (np.cos(v)).reshape((-1, 1)) + 2
-
-        data = np.concatenate([x1, y1, z1], axis=1)
-        return data
-
-    @staticmethod
-    def get_add_sphere_3():
-        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
-        x1 = (np.cos(u) * np.sin(v)).reshape((-1, 1)) / 2
-        y1 = (np.sin(u) * np.sin(v)).reshape((-1, 1)) / 2
-        z1 = (np.cos(v)).reshape((-1, 1)) / 2
+        x1 = ((np.cos(u) * np.sin(v)).reshape((-1, 1)) + x_offset) * volume
+        y1 = ((np.sin(u) * np.sin(v)).reshape((-1, 1)) + y_offset) * volume
+        z1 = ((np.cos(v)).reshape((-1, 1)) + z_offset) * volume
 
         data = np.concatenate([x1, y1, z1], axis=1)
         return data
@@ -133,9 +103,9 @@ class test_data:
 
         digits = datasets.load_digits()
         data = digits.data
-        pca = decomposition.PCA(n_components=21)
-        X_reduced = pca.fit_transform(data)
-
+        X_reduced = data
+        #pca = decomposition.PCA(n_components=21)
+        #X_reduced = pca.fit_transform(data)
         return X_reduced
 
     @staticmethod
@@ -151,5 +121,5 @@ class test_data:
         точках, которые и являются кластерами. Имена этих заранее известных кластеров записаны в переменной
         pregenerated."""
 
-        data, pregenerated = make_blobs(1000, n_features=5, cluster_std=4)
+        data, pregenerated = make_blobs(1000, n_features=4)
         return data
