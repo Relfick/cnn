@@ -4,16 +4,22 @@ from numpy.linalg import norm
 from scipy.spatial import Delaunay
 import matplotlib.pyplot as plt
 import seaborn as sns
+# for triangulation
 from annoy import AnnoyIndex
+
+random.seed(0)
+np.random.seed(0)
 
 
 class network:
     def __init__(self, eps=0.25, tol=0.15, pruning=3, thinning=10, num_fluctuations=100, meeting_period=11):
         """
-        :param eps: Допустимая невязка
-        :param tol: Толерантность к ошибкам
+        :param eps: Допустимая невязка. Два нейрона относятся к одному кластеру, если различие в их динамике меньше,
+                    чем абсолютное значение допустимой невязки eps.
+        :param tol: Толерантность к ошибкам - допустимый процент различий в динамике двух нейронов.
         :param pruning: Степень обрезки (сколько знаков после запятой)
         :param thinning: Степень прореживания (как часто отбрасываем элементы)
+        :param num_fluctuations: Число осцилляций нейронов
         :param meeting_period: Период "знакомства" нейронов, в анализе его не учитываем
         """
         self.data = np.array([])
@@ -28,21 +34,36 @@ class network:
         self.num_fluctuations = num_fluctuations
         self.old_fluctuations = num_fluctuations
         self.a = 0
+        self.compute_a_method = None
         self.colors = ['r', 'b', 'g', 'y', 'c', 'm', 'k']
         self.clusters = []
 
-    def forward(self, data):
+    def forward(self, data, compute_a_method='annoy'):
+        """
+        Создает матрицы весов и осцилляций
+        :param data: Данные для кластеризации
+        :param compute_a_method: Метод расчета коэффициента а. 'del' для триангуляции Делоне, 'annoy' для Annoy.
+        """
+
+        if compute_a_method == 'annoy':
+            self.compute_a_method = self.compute_a
+        elif compute_a_method == 'del':
+            self.compute_a_method = self.compute_a_2
+        else:
+            raise ValueError('There are only \'annoy\' and \'del\' methods')
+
         if self.data.size > 0:  # clustering on-the-fly
             self.data = np.row_stack((self.data, data))
         else:  # first input
             self.data = data
 
         new_num_neurons = len(data)
-        self.num_neurons = self.num_neurons + len(data)
+        self.num_neurons += new_num_neurons
 
         self.W = self.calc_w()
 
         y = np.zeros((self.num_fluctuations + self.meeting_period, self.num_neurons))
+        # Задание случайных начальных условий для случаев первичной кластеризации и кластеризации на лету
         if self.y.size == 0:
             y[0] = np.random.sample(self.num_neurons)
         else:
@@ -53,26 +74,28 @@ class network:
 
         self.make_fluctuations()
 
-        return self.y
-
     def calc_w(self):
-        """ Заполнение W """
+        """ Расчет W """
         W = np.zeros((self.num_neurons, self.num_neurons))
 
-        if self.a == 0:
-            self.a = self.compute_a()
+        # Пересчитывать надо в любом случае, так как новые данные могут иметь большой объем
+        self.a = self.compute_a_method()
+        print(f'a = {self.a}')
 
+        # Кластеризация на лету / первичная кластеризация
         if self.W.size == 0:
             start_index = 0
         else:
             start_index = self.W.shape[0]
 
+        print('W calculating started...')
         for i in range(start_index, self.num_neurons):
             for j in range(0, i):
                 d = np.linalg.norm(self.data[i] - self.data[j]) ** 2
                 W[i][j] = np.exp(-d / (2 * self.a))
             if i % 100 == 0:
-                print(f'i = {i}')
+                print(f'W calculating: {round(i / (self.num_neurons - start_index) * 100)}%')
+        print('W calculating finished!')
 
         W = W + W.T
         if self.W.size == 0:
@@ -82,6 +105,7 @@ class network:
             return W
 
     def make_fluctuations(self):
+        print('Start oscillating...')
         result = self.y
         for t in range(1, self.num_fluctuations + self.meeting_period):
             y_new = self.W @ self.chaos_func(result[t - 1])
@@ -94,6 +118,7 @@ class network:
         result = self.thinning_out(result)  # Прореживание
 
         self.y = result
+        print('Oscillating has finished!')
 
     def compute_a_2(self):
         """ Вычисление коэффициента А с помощью триангуляции Делоне """
@@ -111,6 +136,8 @@ class network:
 
     def compute_a(self):
         """ Вычисление коээфициента А с помощью Annoy """
+        print('Computing \'a\' started...')
+
         a = 0
         f = self.data.shape[1]  # Количество параметров примера
         t = AnnoyIndex(f, 'angular')
@@ -127,7 +154,7 @@ class network:
         if self.num_neurons > 1000:
             num_neighbours = 50  # Гиперпараметр, больше соседей - точнее, но медленнее
         else:
-            num_neighbours = round(self.num_neurons / 10)
+            num_neighbours = round(self.num_neurons / 10) # Гиперпараметр, больше соседей - точнее, но медленнее
         for i in range(self.num_neurons):
             neighbours = u.get_nns_by_item(i, num_neighbours)  # Ищем по num_neighbours соседей для каждой точки
             neighbours = [self.dist(self.data[i], self.data[j]) for j in neighbours]
@@ -135,7 +162,8 @@ class network:
                 a += np.array(neighbours).mean()
 
         a /= self.num_neurons
-        print(f'a = {a}')
+
+        print('Computing \'a\' finished!')
         return a
 
     def dist(self, x, y):
@@ -207,10 +235,14 @@ class network:
 
     def calc_m(self):
         """ Матрицы невязок M """
+        print('M calculating started...')
         M = np.zeros((self.num_neurons, self.num_neurons, self.num_fluctuations))
         for i in range(self.num_neurons):
             for k in range(self.num_neurons):
                 M[i][k] = np.abs(self.y[k] - self.y[i])
+            if i % 100 == 0:
+                print(f'M calculating: {round(i / self.num_neurons * 100)}%')
+        print('M calculating finished!')
         return M
 
     def condense_sets(self, sets):

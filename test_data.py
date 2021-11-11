@@ -69,27 +69,21 @@ class test_data:
 
     @staticmethod
     def get_iris():
-        """Кластеризация Ирисов Фишера. Это набор данных для задачи классификации, на примере которого Рональд Фишер в
-        1936 году продемонстрировал работу разработанного им метода дискриминантного анализа. Иногда его также называют
-        ирисами Андерсона, так как данные были собраны американским ботаником Эдгаром Андерсоном.
-        Ирисы Фишера состоят из данных о 150 экземплярах ириса, по 50 экземпляров из трёх видов — Ирис щетинистый (Iris setosa),
+        """150 экземплярах ириса, по 50 экземпляров из трёх видов — Ирис щетинистый (Iris setosa),
         Ирис виргинский (Iris virginica) и Ирис разноцветный (Iris versicolor). Для каждого экземпляра измерялись
-        четыре характеристики (в сантиметрах):
+        четыре характеристики (в см):
 
         Длина наружной доли околоцветника (англ. sepal length);
         Ширина наружной доли околоцветника (англ. sepal width);
         Длина внутренней доли околоцветника (англ. petal length);
         Ширина внутренней доли околоцветника (англ. petal width).
 
-        На основании этого набора данных требуется построить правило классификации, определяющее вид растения по данным
-        измерений. Это задача многоклассовой классификации, так как имеется три класса — три вида ириса.
-
         Один из классов (Iris setosa) линейно-разделим от двух остальных. """
 
-        iris_df = datasets.load_iris()
-        X_train = iris_df.data
-
-        return X_train
+        iris = datasets.load_iris()
+        X = iris.data
+        y = iris.target
+        return X, y
 
     @staticmethod
     def get_digits():
@@ -104,9 +98,9 @@ class test_data:
         digits = datasets.load_digits()
         data = digits.data
         X_reduced = data
-        #pca = decomposition.PCA(n_components=21)
-        #X_reduced = pca.fit_transform(data)
-        return X_reduced
+        pca = decomposition.PCA(n_components=21)
+        X_reduced = pca.fit_transform(data)
+        return X_reduced, digits.target
 
     @staticmethod
     def get_web_users():
@@ -121,5 +115,32 @@ class test_data:
         точках, которые и являются кластерами. Имена этих заранее известных кластеров записаны в переменной
         pregenerated."""
 
-        data, pregenerated = make_blobs(1000, n_features=4)
-        return data
+        data, target = make_blobs(1000, n_features=4)
+        return data, target
+
+    @staticmethod
+    def compare_results(nn_clusters, real_clusters):
+        # Пытаемся привести real_clusters из вида
+        # [0, 0, 0, 1, 1]
+        # к виду nn_clusters
+        # [[0, 1, 2], [3, 4]]
+        real_clusters_2 = {}
+        for i in range(len(real_clusters)):
+            cluster = real_clusters[i]
+            if cluster not in real_clusters_2.keys():
+                real_clusters_2[cluster] = [i]
+            else:
+                real_clusters_2[cluster].append(i)
+        real_clusters_2 = list(real_clusters_2.values())
+
+        errors = 0
+        # Если элемент из кластера real_clusters_2 не принадлежит тому же кластеру в n_clusters, то +ошибка
+        for i in range(len(real_clusters_2)):
+            for j in range(len(real_clusters_2[i])):
+                if i >= len(nn_clusters):
+                    errors += 1
+                    continue
+                elif real_clusters_2[i][j] not in nn_clusters[i]:
+                    errors += 1
+
+        return (len(real_clusters) - errors) / len(real_clusters)
