@@ -38,7 +38,7 @@ class network:
         self.colors = ['r', 'b', 'g', 'y', 'c', 'm', 'k']
         self.clusters = []
 
-    def forward(self, data, compute_a_method='annoy'):
+    def forward(self, data, compute_a_method='del'):
         """
         Создает матрицы весов и осцилляций
         :param data: Данные для кластеризации
@@ -73,6 +73,36 @@ class network:
         self.y = y
 
         self.make_fluctuations()
+
+    def smart_clustering(self, data, target=None, compute_a_method='del'):
+        """
+        Перебирает гиперпараметры для получения наилучших результатов
+        :param data: данные для кластеризации
+        :param target: эталонный вариант кластеризации
+        :param compute_a_method: 'del' или 'annoy'
+        """
+        self.forward(data=data, compute_a_method=compute_a_method)
+        stats = dict()
+        progress = 0        # Процент выполнения функции
+        _from = 5
+        _to = 95
+        _step = 20
+        _num_steps = len(range(_from, _to, _step)) ** 2
+        for eps in range(_from, _to, _step):
+            for tol in range(_from, _to, _step):
+                self.eps = eps / 100
+                self.tol = tol / 100
+                stat_curr = self.compare_results(self.get_clusters(), target)
+                stats[(self.eps, self.tol)] = stat_curr
+                progress += 1
+                print(f'\t\t\t\t\t\t\t Progress: {round(progress / _num_steps * 100)}%')
+
+        best_eps, best_tol = max(stats, key=lambda x: stats[x])
+        best_correctly_clustered = stats[(best_eps, best_tol)]
+        self.eps = best_eps
+        self.tol = best_tol
+        self.get_clusters()
+        return best_eps, best_tol, best_correctly_clustered
 
     def calc_w(self):
         """ Расчет W """
@@ -268,6 +298,32 @@ class network:
                                      for i in range(len(result) - 7)]
 
         return result
+
+    def compare_results(self, nn_clusters, real_clusters):
+        # Пытаемся привести real_clusters из вида
+        # [0, 0, 0, 1, 1]
+        # к виду nn_clusters
+        # [[0, 1, 2], [3, 4]]
+        real_clusters_2 = {}
+        for i in range(len(real_clusters)):
+            cluster = real_clusters[i]
+            if cluster not in real_clusters_2.keys():
+                real_clusters_2[cluster] = [i]
+            else:
+                real_clusters_2[cluster].append(i)
+        real_clusters_2 = list(real_clusters_2.values())
+
+        errors = 0
+        # Если элемент из кластера real_clusters_2 не принадлежит тому же кластеру в n_clusters, то +ошибка
+        for i in range(len(real_clusters_2)):
+            for j in range(len(real_clusters_2[i])):
+                if i >= len(nn_clusters):
+                    errors += 1
+                    continue
+                elif real_clusters_2[i][j] not in nn_clusters[i]:
+                    errors += 1
+
+        return (len(real_clusters) - errors) / len(real_clusters)
 
     def visualize_sync(self):
         fig = plt.figure()
