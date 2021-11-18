@@ -74,16 +74,16 @@ class network:
 
         self.make_fluctuations()
 
-    def smart_clustering(self, data, target=None, compute_a_method='del'):
+    def smart_clustering_accuracy(self, data, target=None, compute_a_method='del'):
         """
-        Перебирает гиперпараметры для получения наилучших результатов
+        Перебирает гиперпараметры для получения самых точных результатов
         :param data: данные для кластеризации
         :param target: эталонный вариант кластеризации
         :param compute_a_method: 'del' или 'annoy'
         """
         self.forward(data=data, compute_a_method=compute_a_method)
-        stats = dict()
-        progress = 0        # Процент выполнения функции
+        stats = dict()                                          # {(eps, tol): accuracy}
+        progress = 0                                            # Процент выполнения функции
         _from = 5
         _to = 95
         _step = 20
@@ -103,6 +103,64 @@ class network:
         self.tol = best_tol
         self.get_clusters()
         return best_eps, best_tol, best_correctly_clustered
+
+    def smart_clustering_frequency(self, data, target=None, compute_a_method='del'):
+        """
+        Перебирает гиперпараметры для получения самого частого результата
+        :param data: данные для кластеризации
+        :param target: эталонный вариант кластеризации
+        :param compute_a_method: 'del' или 'annoy'
+        """
+        self.forward(data=data, compute_a_method=compute_a_method)
+        clustering_variants_params = [[[-1, -1], [-1., -1.]]]       # [[clustering_variant: [eps, tol]]]
+        clustering_variants_freq = [[[-1, -1], [-1]]]               # [[clustering_variant, frequency]]
+        progress = 0                                                # Процент выполнения функции
+        _from = 5
+        _to = 95
+        _step = 10
+        _num_steps = len(range(_from, _to, _step)) ** 2
+        for eps in range(_from, _to, _step):
+            for tol in range(_from, _to, _step):
+                self.eps = eps / 100
+                self.tol = tol / 100
+
+                clustering_variant_curr = self.get_clusters()
+                for curr_var in clustering_variants_freq:
+                    if curr_var[0] == clustering_variant_curr:
+                        curr_var[1][0] += 1
+                        break
+                else:
+                    clustering_variants_freq.append([clustering_variant_curr, [1]])
+
+                for curr_var in clustering_variants_params:
+                    if curr_var[0] == clustering_variant_curr:
+                        curr_var[1] = [self.eps, self.tol]
+                        break
+                else:
+                    clustering_variants_params.append([clustering_variant_curr, [self.eps, self.tol]])
+
+                progress += 1
+                print(f'\t\t\t\t\t\t\t Progress: {round(progress / _num_steps * 100)}%')
+
+        max_freq = -1
+        max_freq_var = -1
+        freq_eps = -1
+        freq_tol = -1
+        for i in range(len(clustering_variants_freq)):
+            if clustering_variants_freq[i][1][0] > max_freq:
+                max_freq = clustering_variants_freq[i][1][0]
+                max_freq_var = clustering_variants_freq[i][0]
+
+        for el in clustering_variants_params:
+            if el[0] == max_freq_var:
+                freq_eps = el[1][0]
+                freq_tol = el[1][1]
+
+        self.eps = freq_eps
+        self.tol = freq_tol
+
+        correctly_clustered = self.compare_results(self.get_clusters(), target)
+        return freq_eps, freq_tol, max_freq, correctly_clustered
 
     def calc_w(self):
         """ Расчет W """
