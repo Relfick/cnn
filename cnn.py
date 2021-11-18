@@ -115,7 +115,6 @@ class network:
             result[t] = self.prune(result[t])  # Обрезка
 
         result = (np.delete(result, range(self.meeting_period), 0)).T  # Удаление рандомных стартовых значений
-        result = self.thinning_out(result)  # Прореживание
 
         self.y = result
         print('Oscillating has finished!')
@@ -201,8 +200,13 @@ class network:
         return y_thinned
 
     def get_clusters(self):
+        y_old = self.y.copy()
+        self.y = self.thinning_out(self.y)      # Прореживание
+
         self.clusters = [list(i) for i in self.form_clusters()]
+
         self.num_fluctuations = self.old_fluctuations
+        self.y = y_old.copy()
         return self.clusters
 
     def form_clusters(self):
