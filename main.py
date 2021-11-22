@@ -14,12 +14,12 @@ if __name__ == "__main__":
     # target = sum(target, [])
 
     """ Spheres one in another """
-    sphere1 = test_data.get_sphere()
-    sphere2 = test_data.get_sphere(volume=3)
-    sphere3 = test_data.get_sphere(volume=5)
-    data = np.row_stack((sphere1, sphere2, sphere3))
-    target = [[i]*200 for i in range(data.shape[1])]
-    target = sum(target, [])
+    # sphere1 = test_data.get_sphere()
+    # sphere2 = test_data.get_sphere(volume=3)
+    # sphere3 = test_data.get_sphere(volume=5)
+    # data = np.row_stack((sphere1, sphere2, sphere3))
+    # target = [[i]*200 for i in range(data.shape[1])]
+    # target = sum(target, [])
 
     """ Iris """
     # data, target = test_data.get_iris()
@@ -36,6 +36,10 @@ if __name__ == "__main__":
     # plt.show()
     # data = test_data.normalize_minmax(data)
 
+    """ Users """
+    data, target = test_data.get_web_users()
+    data, target = test_data.sort_target_data(data, target)
+    data = test_data.normalize_minmax(data)
 
     net = network()
     net.forward(data, compute_a_method='del')

@@ -144,3 +144,22 @@ class test_data:
                     errors += 1
 
         return (len(real_clusters) - errors) / len(real_clusters)
+
+    @staticmethod
+    # метод сортирует target и соответственно data
+    def sort_target_data(data, target):
+        d = {}
+        # словарь вида порядковый номер: значение из target
+        for i in range(len(target)):
+            d[i] = target[i]
+        # словарь, отсортированный по value, т.е. по значениям target
+        sorted_dict = dict(sorted(d.items(), key=lambda x: x[1]))
+
+        sorted_target = []
+        sorted_data = []
+
+        for key in sorted_dict:
+            sorted_data.append(data[key])
+            sorted_target.append(sorted_dict[key])
+
+        return sorted_data, sorted_target
